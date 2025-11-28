@@ -27,31 +27,50 @@ struct Engine {
     // Inserts a new record and updates both indexes.
     // Returns the record ID (RID) in the heap.
     int insertRecord(const Record &recIn) {
-        //TODO
+        int rid = static_cast<int>(heap.size());
+
+        Record rec = recIn;
+        rec.deleted = false;
+        heap.push_back(rec);
+
+        idIndex.insert(rec.id, rid);
+
+        string key = toLower(rec.last);
+        vector<int> *vecPtr = lastIndex.find(key);
+        if (!vecPtr) {
+            vector<int> v;
+            v.push_back(rid);
+            lastIndex.insert(key, v);
+        } else {
+            vecPtr->push_back(rid);      
+        }
+
+        return rid;
     }
 
     // Deletes a record logically (marks as deleted and updates indexes)
     // Returns true if deletion succeeded.
     bool deleteById(int id) {
-        //TODO
+        return true;
     }
 
     // Finds a record by student ID.
     // Returns a pointer to the record, or nullptr if not found.
     // Outputs the number of comparisons made in the search.
     const Record *findById(int id, int &cmpOut) {
-        //TODO    }
+        return &heap[rid]; 
+    }
 
     // Returns all records with ID in the range [lo, hi].
     // Also reports the number of key comparisons performed.
     vector<const Record *> rangeById(int lo, int hi, int &cmpOut) {
-        //TODO
+        return out;
     }
 
     // Returns all records whose last name begins with a given prefix.
     // Case-insensitive using lowercase comparison.
     vector<const Record *> prefixByLast(const string &prefix, int &cmpOut) {
-        //TODO
+        return out;
     }
 };
 
