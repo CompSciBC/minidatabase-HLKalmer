@@ -89,7 +89,21 @@ struct Engine {
     // Returns a pointer to the record, or nullptr if not found.
     // Outputs the number of comparisons made in the search.
     const Record *findById(int id, int &cmpOut) {
-        //TODO
+        idIndex.resetMetrics();
+        int *posPtr = idIndex.find(id);
+
+        cmpOut = idIndex.comparisons;
+
+        if (!posPtr) return nullptr;
+
+        int rid = *posPtr;
+        if (rid < 0 || rid >= static_cast<int>(heap.size()))
+            return nullptr;
+
+        if (heap[rid].deleted)
+            return nullptr;
+
+        return &heap[rid];
     }
 
     // Returns all records with ID in the range [lo, hi].
