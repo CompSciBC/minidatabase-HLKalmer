@@ -27,20 +27,84 @@ struct Engine {
     // Inserts a new record and updates both indexes.
     // Returns the record ID (RID) in the heap.
     int insertRecord(const Record &recIn) {
-        //TODO
+        int rid = static_cast<int>(heap.size());
+
+        Record rec = recIn;
+        rec.deleted = false;
+        heap.push_back(rec);
+
+        idIndex.insert(rec.id, rid);
+
+        string key = toLower(rec.last);
+        vector<int> *vecPtr = lastIndex.find(key);
+        if (!vecPtr) {
+            vector<int> v;
+            v.push_back(rid);
+            lastIndex.insert(key, v);
+        } else {
+            vecPtr->push_back(rid);      
+        }
+
+        return rid;
     }
 
     // Deletes a record logically (marks as deleted and updates indexes)
     // Returns true if deletion succeeded.
     bool deleteById(int id) {
-        //TODO
+
+        int *posPtr = idIndex.find(id);
+        if (!posPtr) return false;
+
+        int rid = *posPtr;
+        if (rid < 0 || rid >= static_cast<int>(heap.size()))
+            return false;
+
+        if (heap[rid].deleted)
+            return false;
+
+        heap[rid].deleted = true;
+
+        idIndex.erase(id);
+
+        string key = toLower(heap[rid].last);
+        vector<int> *vecPtr = lastIndex.find(key);
+        if (vecPtr) {
+            vector<int> &v = *vecPtr;
+            
+            for (size_t i = 0; i < v.size(); ++i) {
+                if (v[i] == rid) {
+                    v.erase(v.begin() + static_cast<long>(i));
+                    break;
+                }
+            }
+            if (v.empty()) {
+                lastIndex.erase(key);
+            }
+        }
+
+        return true;
     }
 
     // Finds a record by student ID.
     // Returns a pointer to the record, or nullptr if not found.
     // Outputs the number of comparisons made in the search.
     const Record *findById(int id, int &cmpOut) {
-        //TODO    }
+        idIndex.resetMetrics();
+        int *posPtr = idIndex.find(id);
+
+        cmpOut = idIndex.comparisons;
+
+        if (!posPtr) return nullptr;
+
+        int rid = *posPtr;
+        if (rid < 0 || rid >= static_cast<int>(heap.size()))
+            return nullptr;
+
+        if (heap[rid].deleted)
+            return nullptr;
+
+        return &heap[rid];
+    }
 
     // Returns all records with ID in the range [lo, hi].
     // Also reports the number of key comparisons performed.
