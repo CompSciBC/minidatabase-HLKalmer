@@ -109,13 +109,51 @@ struct Engine {
     // Returns all records with ID in the range [lo, hi].
     // Also reports the number of key comparisons performed.
     vector<const Record *> rangeById(int lo, int hi, int &cmpOut) {
-        //TODO
+        vector<const Record *> out;
+
+        idIndex.resetMetrics();
+        idIndex.rangeApply(lo, hi, [&](const int &k, int &rid) {
+            
+            if (rid >= 0 &&
+                rid < static_cast<int>(heap.size()) &&
+                !heap[rid].deleted) {
+                out.push_back(&heap[rid]);
+            }
+        });
+        cmpOut = idIndex.comparisons;
+
+        return out;
     }
 
     // Returns all records whose last name begins with a given prefix.
     // Case-insensitive using lowercase comparison.
     vector<const Record *> prefixByLast(const string &prefix, int &cmpOut) {
-        //TODO
+        vector<const Record *> out;
+
+        string low = toLower(prefix);
+        
+        string high = low;
+        high.push_back(char(127)); 
+
+        lastIndex.resetMetrics();
+        lastIndex.rangeApply(low, high, [&](const string &key, vector<int> &rids) {
+            
+            if (key.size() < low.size()) return;
+            for (size_t i = 0; i < low.size(); ++i) {
+                if (key[i] != low[i]) return;
+            }
+
+            for (int rid : rids) {
+                if (rid >= 0 &&
+                    rid < static_cast<int>(heap.size()) &&
+                    !heap[rid].deleted) {
+                    out.push_back(&heap[rid]);
+                }
+            }
+        });
+        cmpOut = lastIndex.comparisons;
+
+        return out;
     }
 };
 
